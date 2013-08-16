@@ -11,7 +11,7 @@ Type this into the command line:
 # To Run Script With Tests
 Type this into the command line:
 > bundle
-Then
-> rspec
+>
+> rspec 
 
 ### By Conner Smith
