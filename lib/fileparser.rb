@@ -1,4 +1,5 @@
-# fileparser.rb
+# fileparser.rb'
+require 'csv'
 
 class FileParser
 
@@ -15,7 +16,8 @@ class FileParser
   end
 
   def format_all_data
-    @data = data_modifier(@data)
+    data = data_modifier(@data)
+    @data = map_to_hash(data)
   end
 
   def sort_all_data
@@ -24,49 +26,54 @@ class FileParser
 
     puts
     puts "Output 1"
-    puts
+    puts "--------"
 
-    x = output_1(@data)
-    x.each{|x| p x}
+    people_by_gender_name = output_1(@data)
+    people_by_gender_name.each{|x| puts x.map{|k,v| "#{v}"}.join(' ')}
 
     puts
     puts "Output 2"
-    puts
+    puts "--------"
 
-    y = output_2(@data)
-    y.each{|y| p y}
+    people_by_age = output_2(@data)
+    people_by_age.each{|x| puts x.map{|k,v| "#{v}"}.join(' ')}
 
     puts
     puts "Output 3"
-    puts
+    puts "--------"
 
-    z = output_3(@data)
-    z.each{|z| p z}
+    people_by_name = output_3(@data)
+    people_by_name.each{|x| puts x.map{|k,v| "#{v}"}.join(' ')}
   end
 
   def output_1(data) #sort by gender and last name
-    data = data.sort!{|a,b| [a[2],a[0]]<=>[b[2],b[0]]}
+    @data = data.sort!{|a,b| [a[:gender],a[:last_name]]<=>[b[:gender],b[:last_name]]}
   end
 
   def output_2(data) #sort by birthday
-    data = data.sort_by!{|a| m,d,y=a[3].split("/").map{|x| x.to_i};[y,m,d]}
+    sorted_data = data.sort_by!{|a| m,d,y=a[:birthday].split("/").map{|x| x.to_i};[y,m,d]}
   end
 
   def output_3(data) #sort by last name descending
-    data = data.sort!{|a,b| b[0]<=>a[0]}
+    sorted_data = data.sort!{|a,b| b[:last_name]<=>a[:last_name]}
   end
 
   def fileopener(txt_file)
     if File.exists?(txt_file)
-      File.foreach(txt_file) do |a|
-        case
-          when a.include?(",")
-            @data << a.split(",")
-          when a.include?("|")
-            @data << a.split("|")
-          else
-            @data << a.split(" ")
-        end
+      type = detect_file_type(txt_file)
+      case
+        when type == "csv"
+          CSV.foreach(txt_file) do |row|
+            @data << row
+          end
+        when type == "psv"
+          CSV.foreach(txt_file, col_sep: '|') do |row|
+            @data << row
+          end
+        when type == "ssv"
+          CSV.foreach(txt_file, col_sep: ' ') do |row|
+            @data << row
+          end
       end
       @data
     else
@@ -74,12 +81,28 @@ class FileParser
     end
   end
 
+  def detect_file_type(file)
+    File.foreach(file) do |row|
+      case
+        when row.include?(",")
+          return "csv"
+          break
+        when row.include?("|")
+          return "psv"
+          break
+        else
+          return "ssv"
+          break
+      end
+    end
+  end
+
   def data_modifier(data)
-    data.each do |p|
-      midname_modifier(p)
-      gender_modifier(p)
-      date_mover(p)
-      date_modifier(p)
+    data.each do |row|
+      midname_modifier(row)
+      gender_modifier(row)
+      date_mover(row)
+      date_modifier(row)
     end
     data
   end
@@ -111,7 +134,7 @@ class FileParser
     end
   end
 
-  def date_mover(date)
+  def date_mover(date) #puts the date into the correct position
     x = nil
     date.each_with_index do |date, i|
       date.strip!
@@ -126,8 +149,12 @@ class FileParser
 
 
   def date_modifier(date)
-
     date[(date.length-2)].gsub!(/-/,"/")
+  end
+
+  def map_to_hash(data)
+    keys = [:last_name, :first_name, :gender, :birthday, :color]
+    data = data.map!{|x| Hash[keys.zip(x)]}
   end
 
 end

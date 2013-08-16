@@ -12,7 +12,7 @@ describe FileParser do
     it "opens all files and compiles the data" do
       data = @x.get_all_data
       expect(data.length).to eq(9)
-      expect(data[0]).to eq(["Abercrombie", " Neil", " Male", " Tan", " 2/13/1943\n"])
+      expect(data[0]).to eq(["Abercrombie", " Neil", " Male", " Tan", " 2/13/1943"])
       expect(data[7]).to eq(["Hingis", "Martina", "M", "F", "4-2-1979", "Green"])
     end
 
@@ -20,11 +20,18 @@ describe FileParser do
 
   context "format all data" do
 
+    it "maps all arrays to hashes" do
+      data = @x.get_all_data
+      data = @x.data_modifier(data)
+      @x.map_to_hash(data)
+      expect(data[0]).to eq({:last_name=>"Abercrombie", :first_name=>"Neil", :gender=>"Male", :birthday=>"2/13/1943", :color=>"Tan"})
+    end
+
     it "correctly formats the data" do
       data = @x.get_all_data
       @x.format_all_data
-      expect(data[0]).to eq(["Abercrombie", "Neil", "Male", "2/13/1943", "Tan"])
-      expect(data[7]).to eq(["Hingis", "Martina", "Female", "4/2/1979", "Green"])
+      expect(data[0]).to eq( {:last_name=>"Abercrombie", :first_name=>"Neil", :gender=>"Male", :birthday=>"2/13/1943", :color=>"Tan"})
+      expect(data[7]).to eq({:last_name=>"Hingis", :first_name=>"Martina", :gender=>"Female", :birthday=>"4/2/1979", :color=>"Green"})
     end
 
   end
@@ -35,24 +42,24 @@ describe FileParser do
       data = @x.get_all_data
       data = @x.format_all_data
       @x.output_1(data)
-      expect(data.first).to eq(%w[Hingis Martina Female 4/2/1979 Green])
-      expect(data.last).to eq(%w[Smith Steve Male 3/3/1985 Red])
+      expect(data.first).to eq({:last_name=>"Hingis", :first_name=>"Martina", :gender=>"Female", :birthday=>"4/2/1979", :color=>"Green"})
+      expect(data.last).to eq({:last_name=>"Smith", :first_name=>"Steve", :gender=>"Male", :birthday=>"3/3/1985", :color=>"Red"})
     end
 
     it "sorts by birthday, ascending" do
       data = @x.get_all_data
       data = @x.format_all_data
       @x.output_2(data)
-      expect(data.first).to eq(["Abercrombie", "Neil", "Male", "2/13/1943", "Tan"])
-      expect(data.last).to eq(["Smith", "Steve", "Male", "3/3/1985", "Red"])
+      expect(data.first).to eq({:last_name=>"Abercrombie", :first_name=>"Neil", :gender=>"Male", :birthday=>"2/13/1943", :color=>"Tan"})
+      expect(data.last).to eq({:last_name=>"Smith", :first_name=>"Steve", :gender=>"Male", :birthday=>"3/3/1985", :color=>"Red"})
     end
 
     it "sorts by last name, descending" do
       data = @x.get_all_data
       data = @x.format_all_data
       @x.output_3(data)
-      expect(data.first).to eq(["Smith", "Steve", "Male", "3/3/1985", "Red"])
-      expect(data.last).to eq(["Abercrombie", "Neil", "Male", "2/13/1943", "Tan"])
+      expect(data.first).to eq({:last_name=>"Smith", :first_name=>"Steve", :gender=>"Male", :birthday=>"3/3/1985", :color=>"Red"})
+      expect(data.last).to eq({:last_name=>"Abercrombie", :first_name=>"Neil", :gender=>"Male", :birthday=>"2/13/1943", :color=>"Tan"})
     end
 
   end
@@ -69,18 +76,18 @@ describe FileParser do
     end
 
     it "detects if an uploaded file is a csv" do
-      data = @x.fileopener("files/comma.txt")
-      expect(data[0].length).to eq(5)
+      result = @x.detect_file_type("files/comma.txt")
+      expect(result).to eq("csv")
     end
 
     it "detects if an uploaded file is a psv" do
-      data = @x.fileopener("files/pipe.txt")
-      expect(data[0].length).to eq(6)
+      result = @x.detect_file_type("files/pipe.txt")
+      expect(result).to eq("psv")
     end
 
     it "detects if an uploaded file is a ssv" do
-      data = @x.fileopener("files/space.txt")
-      expect(data[0].length).to eq(6)
+      result = @x.detect_file_type("files/space.txt")
+      expect(result).to eq("ssv")
     end
 
   end
